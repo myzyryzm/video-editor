@@ -2,12 +2,12 @@
 
 import React, { useContext } from 'react'
 import Dropzone from 'react-dropzone'
-import { Paper } from '@material-ui/core'
-import { withStyles } from '@material-ui/core/styles'
+import Paper from '@material-ui/core/Paper'
+import { withStyles } from '@material-ui/core'
 import { CloudUpload as CloudUploadIcon } from '@material-ui/icons'
-import FFmpegContext from '../ffmpeg/FFmpegContext'
+import FFmpegContext from '../FFmpeg/FFmpegContext'
 
-const DropZonePaper = withStyles({
+const DropZonePaper = withStyles((theme) => ({
     root: {
         padding: 16,
         backgroundColor: 'white',
@@ -15,7 +15,7 @@ const DropZonePaper = withStyles({
         webkitBoxShadow: 'inset 0 0 10px #9c9c9c',
         boxShadow: 'inset 0 0 3px 3px #9c9c9c',
     },
-})(Paper)
+}))(Paper)
 
 /**
  * Functional Component for rendering Upload Zone
@@ -27,20 +27,13 @@ const DropZonePaper = withStyles({
  */
 
 export default function UploadZone() {
-    const { setUploadedFile, setUploadAlert } = useContext(FFmpegContext)
+    const { uploadFile } = useContext(FFmpegContext)
 
-    async function onDrop(files) {
-        // initialize video upload and reset segment time when re-upload
-        let file
-
+    async function onDrop(files: Array<File>) {
         // do not allow multiple file uploads
-        if (files.length > 1) {
-            setUploadAlert('error')
-        } else if (files.length == 1) {
-            file = files[0]
-            setUploadedFile(file)
-            console.log(typeof file)
-            console.log('file', file)
+        if (files.length == 1) {
+            const file = files[0]
+            uploadFile(file)
         }
     }
 
