@@ -5,7 +5,7 @@ import Dropzone from 'react-dropzone'
 import { Paper } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 import { CloudUpload as CloudUploadIcon } from '@material-ui/icons'
-import FFmpegContext from '../FFmpegContext'
+import FFmpegContext from '../ffmpeg/FFmpegContext'
 
 const DropZonePaper = withStyles({
     root: {

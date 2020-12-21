@@ -2,8 +2,8 @@
 
 import React from 'react'
 import Home from './Home'
-import useFFmpeg from './useFFmpeg'
-import FFmpegContext from './FFmpegContext'
+import useFFmpeg from './ffmpeg/useFFmpeg'
+import FFmpegContext from './ffmpeg/FFmpegContext'
 
 function App() {
     const ffmpeg = useFFmpeg()

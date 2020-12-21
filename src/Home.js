@@ -2,7 +2,7 @@
 
 import React, { useContext } from 'react'
 import UploadZone from './components/UploadZone'
-import FFmpegContext from './FFmpegContext'
+import FFmpegContext from './ffmpeg/FFmpegContext'
 
 function Home() {
     const { doTranscode, message, videoSrc } = useContext(FFmpegContext)
