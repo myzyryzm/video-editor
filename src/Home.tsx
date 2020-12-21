@@ -27,10 +27,11 @@ export default function Home() {
         <div style={{ textAlign: 'center' }}>
             {inputFile ? (
                 inputMetadata.length === 0 ? (
-                    <UploadProgress color='primary' />
+                    <UploadProgress color='primary' size={100} />
                 ) : inputSrc ? (
                     <>
                         <video src={inputSrc} controls></video>
+                        <br />
                         {inputMetadata[1] && <p>Loaded ok!</p>}
                     </>
                 ) : (

@@ -14,6 +14,7 @@ const DropZonePaper = withStyles((theme) => ({
         mozBoxShadow: 'inset 0 0 10px #9c9c9c',
         webkitBoxShadow: 'inset 0 0 10px #9c9c9c',
         boxShadow: 'inset 0 0 3px 3px #9c9c9c',
+        color: 'black',
     },
 }))(Paper)
 
