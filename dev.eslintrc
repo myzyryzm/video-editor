@@ -1,0 +1,14 @@
+{
+    "rules": {
+        "no-debugger": [
+            "warn"
+        ],
+        "no-empty": [
+            "warn"
+        ],
+        "no-empty-function": 0,
+        "no-constant-condition": [
+            "warn"
+        ]
+    }
+}

@@ -48,6 +48,7 @@ export default function useFFmpeg(): FFmpegHook {
     async function uploadFile(file: File) {
         setInputFile(file)
         setInputSrc(URL.createObjectURL(file))
+        ffmpeg.FS
         let mediainfo
         let videoMetaData
         try {
@@ -81,6 +82,7 @@ export default function useFFmpeg(): FFmpegHook {
         } finally {
             mediainfo && mediainfo.close()
         }
+        // setInputMetadata([true, true, true])
     }
 
     function resetUpload() {
