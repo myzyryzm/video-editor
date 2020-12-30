@@ -1,0 +1,13 @@
+flask
+requests
+gunicorn==19.9.0
+requests
+boto3
+natsort
+pypng
+wquantiles
+pillow
+fpdf
+opencv-python==3.4.8.29 
+opencv-contrib-python==3.4.8.29
+supervisor
