@@ -254,9 +254,6 @@ export default function useVideoPlayer(
         if (!plyr) {
             return 0
         }
-        if (plyr === null) {
-            return 0
-        }
         if (time !== undefined) {
             time = time > 0 ? time : 0
             plyr.currentTime = time
