@@ -3,3 +3,5 @@ node_modules
 build
 *.env
 .vscode/*
+api/uploads
+api/temp
