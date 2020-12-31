@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useContext } from 'react'
+import React, { useContext, useRef } from 'react'
 import MomentUtils from '@date-io/moment'
 import moment, { Moment } from 'moment'
 import {
@@ -16,7 +16,8 @@ import {
     Button,
 } from '@material-ui/core'
 import useTrimming from './useTrimming'
-import TrimBar from './TrimBar'
+import TrimSlider from './TrimSlider'
+import SeekbarSlider from '../ControlBar/SeekbarSlider'
 import VideoPlayerContext from '../VideoPlayer/VideoPlayerContext'
 
 const Header = withStyles((theme) => ({
@@ -106,38 +107,24 @@ function TimePicker({
 interface ITrimPanel {}
 
 export default function TrimPanel({}: ITrimPanel) {
-    const {
-        trimEnd,
-        trimStart,
-        updateTrimTime,
-        maxStartTime,
-        setTrimToCurrentTime,
-        changeTrimTime,
-        _trimStart,
-        _trimEnd,
-    } = useTrimming()
-    const { duration } = useContext(VideoPlayerContext)
+    const { setTrimTimeToCurrentTime, setTrimTime, trimTime } = useTrimming()
+    const { duration, currentTime, onSeek: videoOnSeek } = useContext(
+        VideoPlayerContext
+    )
+    const seekbarRef = useRef<HTMLSpanElement>({} as HTMLSpanElement)
 
-    function updateTrimTimes(start: number, end: number) {
-        changeTrimTime('start', start)
-        changeTrimTime('end', end)
-        // const newStart: Moment = moment()
-        //     .set({
-        //         hour: 0,
-        //         minute: 0,
-        //         second: 0,
-        //     })
-        //     .add(start, 'seconds')
-        // updateTrimTime('start', newStart)
-        // const newEnd: Moment = moment()
-        //     .set({
-        //         hour: 0,
-        //         minute: 0,
-        //         second: 0,
-        //     })
-        //     .add(end, 'seconds')
-        // updateTrimTime('end', newEnd)
+    function setTrimTimes(start: number | Moment, end: number | Moment) {
+        setTrimTime('start', start)
+        setTrimTime('end', end)
     }
+    function onSeek(newProgress: number) {
+        videoOnSeek(newProgress * duration)
+    }
+
+    const trimStart = trimTime('start', 'number') as number
+    const trimEnd = trimTime('end', 'number') as number
+    const trimStartMoment = trimTime('start', 'moment') as Moment
+    const trimEndMoment = trimTime('end', 'moment') as Moment
 
     return (
         <Card
@@ -159,25 +146,34 @@ export default function TrimPanel({}: ITrimPanel) {
                     component={Header}
                     style={{ fontSize: 20 }}
                 />
-                <TrimBar
-                    trimStart={_trimStart}
-                    trimEnd={_trimEnd}
-                    updateTrimTimes={updateTrimTimes}
+                <Typography style={{ color: 'white' }}>
+                    Something about whatever it is this does.
+                </Typography>
+                <SeekbarSlider
+                    ref={seekbarRef}
+                    onSeek={onSeek}
+                    currentTime={currentTime()}
+                    duration={duration}
+                />
+                <TrimSlider
+                    trimStart={trimStart}
+                    trimEnd={trimEnd}
+                    setTrimTimes={setTrimTimes}
                     maxTimeSeconds={duration}
                 />
                 {/* <TimePicker
                     type='start'
-                    time={trimStart}
-                    onChange={updateTrimTime}
-                    maxTimeSeconds={maxStartTime}
-                    setToTime={() => setTrimToCurrentTime('start')}
+                    time={trimStartMoment}
+                    onChange={setTrimTime}
+                    maxTimeSeconds={trimEnd}
+                    setToTime={() => setTrimTimeToCurrentTime('start')}
                 />
                 <TimePicker
                     type='end'
-                    time={trimEnd}
-                    onChange={updateTrimTime}
+                    time={trimEndMoment}
+                    onChange={setTrimTime}
                     maxTimeSeconds={duration}
-                    setToTime={() => setTrimToCurrentTime('end')}
+                    setToTime={() => setTrimTimeToCurrentTime('end')}
                 /> */}
             </CardContent>
         </Card>

@@ -3,6 +3,7 @@ node_modules
 build
 *.env
 .vscode/*
-api/uploads
-api/temp
+backend/uploads
+backend/temp
+backend/__pycache__
 frontend/package-lock.json

@@ -1,21 +1,19 @@
 /** @format */
 import { useState, useEffect, useContext } from 'react'
-import { Vector2D } from '../Common/commonRequirements'
-import { timeStringFromSeconds } from '../Common/utils'
 import { TrimHook } from './commonRequirements'
 import moment, { Moment } from 'moment'
 import VideoPlayerContext from '../VideoPlayer/VideoPlayerContext'
 
 export default function useTrimming(): TrimHook {
     const { duration, currentTime } = useContext(VideoPlayerContext)
-    const [trimStart, setTrimStart] = useState<Moment>(
+    const [trimStartMoment, setTrimStartMoment] = useState<Moment>(
         moment().set({
             hour: 0,
             minute: 0,
             second: 0,
         })
     )
-    const [trimEnd, setTrimEnd] = useState<Moment>(
+    const [trimEndMoment, setTrimEndMoment] = useState<Moment>(
         moment().set({
             hour: 0,
             minute: 0,
@@ -24,117 +22,100 @@ export default function useTrimming(): TrimHook {
     )
     const [trimStartPercent, setTrimStartPercent] = useState<number>(0)
     const [trimEndPercent, setTrimEndPercent] = useState<number>(0)
-    const [maxStartTime, setMaxStartTime] = useState<number>(0)
-    const [_trimStart, _setTrimStart] = useState<number>(0)
-    const [_trimEnd, _setTrimEnd] = useState<number>(0)
+    const [trimStart, setTrimStart] = useState<number>(0)
+    const [trimEnd, setTrimEnd] = useState<number>(0)
 
     useEffect(() => {
         if (duration > 0) {
-            _setTrimEnd(duration)
-            setTrimEnd(
-                moment()
-                    .set({
-                        hour: 0,
-                        minute: 0,
-                        second: 0,
-                    })
-                    .add(duration, 'seconds')
-            )
+            setTrimTime('end', duration)
         }
     }, [duration])
 
     useEffect(() => {
-        const value = trimEnd
-        if (value.isValid()) {
-            let t =
-                value.hours() * 3600 + value.minutes() * 60 + value.seconds()
-            const d = duration > t ? duration : t
-            setTrimEndPercent((100 * (d - t)) / d)
-            setMaxStartTime(t)
-            const trimStartTime = trimTime('start')
-            if (trimStartTime > t) {
-                setTrimStart(value)
+        const time = trimEnd
+        if (time > 0) {
+            const d = duration > time ? duration : time
+            setTrimEndPercent((100 * (d - time)) / d)
+            if (trimTime('start', 'number') > time) {
+                setTrimTime('start', time)
             }
         }
-    }, [trimEnd, duration])
+    }, [trimEnd])
 
     useEffect(() => {
-        const value = trimStart
-        if (value.isValid()) {
-            let t =
-                value.hours() * 3600 + value.minutes() * 60 + value.seconds()
-            const d = duration > t ? duration : t
-            setTrimStartPercent((100 * t) / d)
+        const time = trimStart
+        if (time > 0) {
+            const d = duration > time ? duration : time
+            setTrimStartPercent((100 * time) / d)
         }
-    }, [trimStart, duration])
+    }, [trimStart])
 
-    function trimTime(type: 'start' | 'end'): number {
-        const value = type === 'start' ? trimStart : trimEnd
-        let t = value.hours() * 3600 + value.minutes() * 60 + value.seconds()
-        return t
-    }
-
-    function updateTrimTime(type: 'start' | 'end', value: Moment): void {
-        if (value.isValid()) {
-            if (type === 'start') {
+    function setTrimTime(type: 'start' | 'end', value: number | Moment): void {
+        if (type === 'start') {
+            if (typeof value == 'number') {
                 setTrimStart(value)
-                // let t =
-                //     value.hours() * 3600 + value.minutes() * 60 + value.seconds()
-                // const d = duration.current > t ? duration.current : t
-                // setTrimStartPercent((100 * t) / d)
+                setTrimStartMoment(
+                    moment()
+                        .set({
+                            hour: 0,
+                            minute: 0,
+                            second: 0,
+                        })
+                        .add(value, 'seconds')
+                )
             } else {
+                setTrimStartMoment(value)
+                setTrimStart(
+                    value.hours() * 3600 +
+                        value.minutes() * 60 +
+                        value.seconds() +
+                        value.milliseconds() / 1000
+                )
+            }
+        } else {
+            if (typeof value == 'number') {
                 setTrimEnd(value)
+                setTrimEndMoment(
+                    moment()
+                        .set({
+                            hour: 0,
+                            minute: 0,
+                            second: 0,
+                        })
+                        .add(value, 'seconds')
+                )
+            } else {
+                setTrimEndMoment(value)
+                setTrimEnd(
+                    value.hours() * 3600 +
+                        value.minutes() * 60 +
+                        value.seconds() +
+                        value.milliseconds() / 1000
+                )
             }
         }
     }
 
-    function changeTrimTime(type: 'start' | 'end', value: number): void {
-        if (type === 'start') {
-            _setTrimStart(value)
-        } else {
-            _setTrimEnd(value)
+    function trimTime(
+        type: 'start' | 'end',
+        returnType: 'number' | 'moment' | 'percent'
+    ): number | Moment {
+        if (returnType === 'number') {
+            return type === 'start' ? trimStart : trimEnd
+        } else if (returnType === 'percent') {
+            return type === 'start' ? trimStartPercent : trimEndPercent
         }
+        return type === 'start' ? trimStartMoment : trimEndMoment
     }
 
-    function setTrimToCurrentTime(type: 'start' | 'end'): void {
+    function setTrimTimeToCurrentTime(type: 'start' | 'end'): void {
         const t = currentTime()
-        const value: Moment = moment()
-            .set({
-                hour: 0,
-                minute: 0,
-                second: 0,
-            })
-            .add(t, 'seconds')
-        updateTrimTime(type, value)
-    }
-
-    function trimVector(): Vector2D {
-        let value = trimStart
-        const startTime =
-            value.hours() * 3600 * 1000 +
-            value.minutes() * 60 * 1000 +
-            value.seconds() * 1000 +
-            value.milliseconds()
-        value = trimEnd
-        const endTime =
-            value.hours() * 3600 * 1000 +
-            value.minutes() * 60 * 1000 +
-            value.seconds() * 1000 +
-            value.milliseconds()
-        return [startTime, endTime]
+        setTrimTime(type, t)
     }
 
     return {
-        trimStart,
-        trimEnd,
-        updateTrimTime,
-        trimStartPercent,
-        trimEndPercent,
-        maxStartTime,
-        setTrimToCurrentTime,
-        trimVector,
-        _trimStart,
-        _trimEnd,
-        changeTrimTime,
+        setTrimTimeToCurrentTime: setTrimTimeToCurrentTime,
+        setTrimTime,
+        trimTime,
     }
 }

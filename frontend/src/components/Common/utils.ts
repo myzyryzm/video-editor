@@ -1,5 +1,7 @@
 /** @format */
 
+import { MutableRefObject, useRef, useEffect } from 'react'
+
 export function timeStringFromSeconds(time) {
     let hours = 0
     let minutes = 0
@@ -22,4 +24,22 @@ export function timeStringFromSeconds(time) {
     timeString += minutes < 10 ? `0${minutes}:` : `${minutes}:`
     timeString += seconds < 10 ? `0${seconds}` : seconds
     return timeString
+}
+
+export function useCombinedRefs(...refs): MutableRefObject<any> {
+    const targetRef = useRef()
+
+    useEffect(() => {
+        refs.forEach((ref) => {
+            if (!ref) return
+
+            if (typeof ref === 'function') {
+                ref(targetRef.current)
+            } else {
+                ref.current = targetRef.current
+            }
+        })
+    }, [refs])
+
+    return targetRef
 }
