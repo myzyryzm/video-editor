@@ -10,8 +10,7 @@ import Button from '@material-ui/core/Button'
 import Link from '@material-ui/core/Link'
 import TooltipButton from './components/Common/TooltipButton'
 import GetAppIcon from '@material-ui/icons/GetApp'
-import Grid from '@material-ui/core/Grid'
-import VideoPlayer from './components/VideoPlayer/VideoPlayer'
+import TrimUI from './components/TrimUI/TrimUI'
 import axios from 'axios'
 
 const UploadProgress = withStyles((theme) => ({
@@ -40,45 +39,20 @@ export default function Home() {
     }
 
     return (
-        <div>
+        <div
+            style={{
+                height: '100%',
+                backgroundColor: 'rgb(58, 59, 70)',
+                width: '100%',
+                margin: '0px',
+            }}
+        >
             <TopBar />
             {inputFile ? (
                 inputMetadata.length === 0 ? (
                     <UploadProgress color='primary' size={100} />
                 ) : (
-                    <Grid
-                        item
-                        xs={9}
-                        children={
-                            <VideoPlayer
-                                styles={{
-                                    midWrapper: {
-                                        position: 'relative',
-                                        zIndex: 1,
-                                        background: 'transparent',
-                                    },
-                                    innerWrapper: {
-                                        flexDirection: 'column',
-                                    },
-                                    video: {
-                                        height: 'auto',
-                                        width: '100%',
-                                        position: 'relative',
-                                    },
-                                    controlBar: {
-                                        height: 70,
-                                        maxHeight: 70,
-                                        position: 'relative',
-                                    },
-                                }}
-                                dynamicHeights={false}
-                                enableFullScreen={false}
-                                enableTracking={false}
-                                fadeControlBar={false}
-                            />
-                        }
-                        style={{ margin: 'auto', marginTop: 0 }}
-                    />
+                    <TrimUI />
                 )
             ) : (
                 <UploadZone />
