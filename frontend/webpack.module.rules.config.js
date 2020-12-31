@@ -51,7 +51,7 @@ exports.default = function (productionMode) {
           },
         },
         'css-loader',
-        'postcss-loader',
+        // 'postcss-loader',
         'sass-loader',
       ],
     },

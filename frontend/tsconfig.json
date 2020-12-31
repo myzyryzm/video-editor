@@ -26,7 +26,12 @@
         "strictNullChecks": true /* Enable strict null checks. */,
         "allowJs": true /* Allow javascript files to be compiled. */,
         "lib": ["ES2019", "dom", "dom.iterable"],
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true
     },
     "exclude": ["dist", "node_modules"],
     "watch": ["src"]

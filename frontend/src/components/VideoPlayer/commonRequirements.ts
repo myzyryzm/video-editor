@@ -120,4 +120,7 @@ export interface VideoPlayerHook {
     hideTimeToolTip: () => void
     setMouseOverTime: Dispatch<SetStateAction<number>>
     lastPlayTime: number
+    uploadFile: (file: File) => void
+    inputFile: File | undefined
+    inputMetadata: any[]
 }

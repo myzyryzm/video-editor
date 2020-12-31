@@ -5,3 +5,4 @@ build
 .vscode/*
 api/uploads
 api/temp
+frontend/package-lock.json

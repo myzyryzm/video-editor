@@ -1,11 +1,11 @@
 /** @format */
 import { useRef, useState, useEffect } from 'react'
+import MediaInfo from 'mediainfo.js'
 import {
     VideoSources,
     VideoType,
     VideoPlayerHook,
     Dimensions,
-    Interval,
 } from './commonRequirements'
 import {
     defaultFwdTime,
@@ -15,12 +15,9 @@ import {
 } from '../Common/constants'
 
 /**
- * Hook that is used in the VideoPlayerContext
+ * Hook that is used with VideoPlayerContext
  */
-export default function useVideoPlayer(
-    videoSrc: string,
-    inputMetadata: Array<any>
-): VideoPlayerHook {
+export default function useVideoPlayer(): VideoPlayerHook {
     const currentSources = useRef<VideoSources>({
         current: 'original',
         original: '',
@@ -52,11 +49,14 @@ export default function useVideoPlayer(
         'original'
     )
     const [_duration, updateDuration] = useState<number>(0)
+    const [inputFile, setInputFile] = useState<File | undefined>()
+    const [inputMetadata, setInputMetadata] = useState<Array<any>>([])
+    const [inputSrc, _setInputSrc] = useState<string>('')
 
     useEffect(() => {
         currentSources.current = {
             current: 'original',
-            original: videoSrc,
+            original: '',
             output: '',
         }
         setHasSubtitles(false)
@@ -66,11 +66,16 @@ export default function useVideoPlayer(
         setIsPlaying(false)
         srcInitialized.current = false
         resetVideoSource()
-    }, [videoSrc])
+    }, [])
 
     useEffect(() => {
         // TODO: SET DURATION, VIDEO DIMENSIONS AND OTHER RELEVANT METADATA
     }, [inputMetadata])
+
+    function setInputSrc(src: string) {
+        currentSources.current.original = src
+        // _setInputSrc(src)
+    }
 
     function setVideoDimensions(d: Dimensions) {
         updateVideoDimensions(d)
@@ -219,28 +224,6 @@ export default function useVideoPlayer(
     const paused = (): boolean => {
         const plyr = currentPlayer()
         return !plyr ? false : plyr.paused
-    }
-
-    /**
-     * Gets all the played intervals
-     * @function
-     * @returns all the played intervals
-     */
-    function played(): Array<Interval> {
-        const plyr = currentPlayer()
-        if (!plyr) {
-            return []
-        }
-        const p = plyr.played
-        const num = p.length
-        const played: Array<Interval> = []
-        for (let i = 0; i < num; i++) {
-            played.push({
-                start: p.start(i),
-                end: p.end(i),
-            })
-        }
-        return played
     }
 
     /**
@@ -432,6 +415,43 @@ export default function useVideoPlayer(
         }
     }
 
+    async function uploadFile(file: File) {
+        setInputFile(file)
+        setInputSrc(URL.createObjectURL(file))
+        let mediainfo
+        let videoMetaData: Array<any> = [false, false, false]
+        try {
+            mediainfo = await MediaInfo({ format: 'object' })
+            const getSize = () => file.size
+            const readChunk = (chunkSize, offset) =>
+                new Promise((resolve, reject) => {
+                    const reader = new FileReader()
+                    reader.onload = (event) => {
+                        if (event.target) {
+                            if (event.target.error) {
+                                reject(event.target.error)
+                            }
+                            const result = event.target.result
+                            if (result && typeof result !== 'string') {
+                                resolve(new Uint8Array(result))
+                            }
+                        }
+                    }
+                    reader.readAsArrayBuffer(
+                        file.slice(offset, offset + chunkSize)
+                    )
+                })
+            videoMetaData = await mediainfo
+                .analyzeData(getSize, readChunk)
+                .then((data) => data.media.track)
+            setInputMetadata(videoMetaData)
+        } catch (error) {
+            console.error(error)
+        } finally {
+            mediainfo && mediainfo.close()
+        }
+    }
+
     return {
         currentSrc,
         addEventListener,
@@ -478,5 +498,8 @@ export default function useVideoPlayer(
         },
         setMouseOverTime,
         lastPlayTime: lastPlayTime.current,
+        uploadFile,
+        inputFile,
+        inputMetadata,
     }
 }

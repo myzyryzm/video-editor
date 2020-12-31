@@ -5,7 +5,7 @@ import Dropzone from 'react-dropzone'
 import Paper from '@material-ui/core/Paper'
 import { withStyles } from '@material-ui/core'
 import { CloudUpload as CloudUploadIcon } from '@material-ui/icons'
-import FFmpegContext from '../FFmpeg/FFmpegContext'
+import VideoPlayerContext from '../VideoPlayer/VideoPlayerContext'
 
 const DropZonePaper = withStyles((theme) => ({
     root: {
@@ -28,7 +28,7 @@ const DropZonePaper = withStyles((theme) => ({
  */
 
 export default function UploadZone() {
-    const { uploadFile } = useContext(FFmpegContext)
+    const { uploadFile } = useContext(VideoPlayerContext)
 
     async function onDrop(files: Array<File>) {
         // do not allow multiple file uploads
