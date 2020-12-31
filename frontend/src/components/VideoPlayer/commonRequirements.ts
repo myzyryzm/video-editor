@@ -7,17 +7,7 @@ export interface Dimensions {
     width: number
 }
 
-export interface Interval {
-    start: number
-    end: number
-}
-
 export type VideoType = 'output' | 'original'
-
-/**
- * used for determining what the primary player is => video in BOARD and HYBRID lectures; slides in BYSTANDER and SLIDES lectures
- */
-export type PlayerType = 'video' | 'slides' | 'none'
 
 export interface VideoSources {
     current: VideoType
