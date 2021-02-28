@@ -15,7 +15,7 @@ import {
     Typography,
     Button,
 } from '@material-ui/core'
-import useTrimming from './useTrimming'
+import TrimmingContext from './TrimmingContext'
 import TrimSlider from './TrimSlider'
 import SeekbarSlider from '../ControlBar/SeekbarSlider'
 import VideoPlayerContext from '../VideoPlayer/VideoPlayerContext'
@@ -107,24 +107,26 @@ function TimePicker({
 interface ITrimPanel {}
 
 export default function TrimPanel({}: ITrimPanel) {
-    const { setTrimTimeToCurrentTime, setTrimTime, trimTime } = useTrimming()
+    const { updateInterval, deleteInterval } = useContext(TrimmingContext)
     const { duration, currentTime, onSeek: videoOnSeek } = useContext(
         VideoPlayerContext
     )
+    // console.log('TrimPanel', currentTime(), currentPlayer()?.currentTime)
     const seekbarRef = useRef<HTMLSpanElement>({} as HTMLSpanElement)
 
-    function setTrimTimes(start: number | Moment, end: number | Moment) {
-        setTrimTime('start', start)
-        setTrimTime('end', end)
+    function setTrimTimes(
+        start: number | Moment,
+        end: number | Moment,
+        id: string = ''
+    ) {
+        updateInterval(id, start, end)
     }
     function onSeek(newProgress: number) {
         videoOnSeek(newProgress * duration)
     }
 
-    const trimStart = trimTime('start', 'number') as number
-    const trimEnd = trimTime('end', 'number') as number
-    const trimStartMoment = trimTime('start', 'moment') as Moment
-    const trimEndMoment = trimTime('end', 'moment') as Moment
+    // const trimStartMoment = trimTime('start', 'moment') as Moment
+    // const trimEndMoment = trimTime('end', 'moment') as Moment
 
     return (
         <Card
@@ -156,10 +158,10 @@ export default function TrimPanel({}: ITrimPanel) {
                     duration={duration}
                 />
                 <TrimSlider
-                    trimStart={trimStart}
-                    trimEnd={trimEnd}
                     setTrimTimes={setTrimTimes}
                     maxTimeSeconds={duration}
+                    minTimeSeconds={0}
+                    deleteInterval={deleteInterval}
                 />
                 {/* <TimePicker
                     type='start'

@@ -101,7 +101,7 @@ const CustomSlider = forwardRef<HTMLSpanElement, Partial<ICustomSlider>>(
             value = 0,
             min = 0,
             max = 100,
-            step = 0.1,
+            step = 0.01,
             onMouseEnter = () => {},
             onMouseLeave = () => {},
             onMouseMove = () => {},

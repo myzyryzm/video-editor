@@ -1,27 +1,15 @@
 /** @format */
 
 import React from 'react'
-import Home from './Home'
-import useFFmpeg from './components/FFmpeg/useFFmpeg'
-import FFmpegContext from './components/FFmpeg/FFmpegContext'
-import useVideoPlayer from './components/VideoPlayer/useVideoPlayer'
-import VideoPlayerContext from './components/VideoPlayer/VideoPlayerContext'
-import { ThemeProvider } from '@material-ui/core'
-import theme from './styles/theme'
-import GlobalStyles from './styles/GlobalStyles'
+import AppInner from './AppInner'
+import GlobalContext from './components/Global/GlobalContext'
+import useGlobal from './components/Global/useGlobal'
 
 export default function App() {
-    const ffmpeg = useFFmpeg()
-    const videoPlayer = useVideoPlayer()
-
+    const global = useGlobal()
     return (
-        <ThemeProvider theme={theme}>
-            <GlobalStyles />
-            <FFmpegContext.Provider value={ffmpeg}>
-                <VideoPlayerContext.Provider value={videoPlayer}>
-                    <Home />
-                </VideoPlayerContext.Provider>
-            </FFmpegContext.Provider>
-        </ThemeProvider>
+        <GlobalContext.Provider value={global}>
+            <AppInner />
+        </GlobalContext.Provider>
     )
 }

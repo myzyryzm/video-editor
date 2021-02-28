@@ -11,6 +11,8 @@ import Link from '@material-ui/core/Link'
 import TooltipButton from './components/Common/TooltipButton'
 import GetAppIcon from '@material-ui/icons/GetApp'
 import TrimUI from './components/TrimUI/TrimUI'
+import TrimmingContext from './components/TrimUI/TrimmingContext'
+import useTrimming from './components/TrimUI/useTrimming'
 import axios from 'axios'
 
 const UploadProgress = withStyles((theme) => ({
@@ -22,6 +24,7 @@ const UploadProgress = withStyles((theme) => ({
 
 export default function Home() {
     const { inputFile, inputMetadata } = useContext(VideoPlayerContext)
+    const trimming = useTrimming()
     const [fileName, setFileName] = useState<string>('')
 
     function upload() {
@@ -39,40 +42,42 @@ export default function Home() {
     }
 
     return (
-        <div
-            style={{
-                height: '100%',
-                backgroundColor: 'rgb(58, 59, 70)',
-                width: '100%',
-                margin: '0px',
-            }}
-        >
-            <TopBar />
-            {inputFile ? (
-                inputMetadata.length === 0 ? (
-                    <UploadProgress color='primary' size={100} />
+        <TrimmingContext.Provider value={trimming}>
+            <div
+                style={{
+                    height: '100%',
+                    backgroundColor: 'rgb(58, 59, 70)',
+                    width: '100%',
+                    margin: '0px',
+                }}
+            >
+                <TopBar />
+                {inputFile ? (
+                    inputMetadata.length === 0 ? (
+                        <UploadProgress color='primary' size={100} />
+                    ) : (
+                        <TrimUI />
+                    )
                 ) : (
-                    <TrimUI />
-                )
-            ) : (
-                <UploadZone />
-            )}
-            <Button onClick={upload} variant='contained' color='primary'>
-                Upload
-            </Button>
-            {fileName && (
-                <Link
-                    href={`/uploads/${fileName}`}
-                    target='_blank'
-                    rel='noopener'
-                >
-                    <TooltipButton
-                        ariaLabel='download'
-                        tooltipPosition='top'
-                        children={<GetAppIcon color='secondary' />}
-                    />
-                </Link>
-            )}
-        </div>
+                    <UploadZone />
+                )}
+                <Button onClick={upload} variant='contained' color='primary'>
+                    Upload
+                </Button>
+                {fileName && (
+                    <Link
+                        href={`/uploads/${fileName}`}
+                        target='_blank'
+                        rel='noopener'
+                    >
+                        <TooltipButton
+                            ariaLabel='download'
+                            tooltipPosition='top'
+                            children={<GetAppIcon color='secondary' />}
+                        />
+                    </Link>
+                )}
+            </div>
+        </TrimmingContext.Provider>
     )
 }

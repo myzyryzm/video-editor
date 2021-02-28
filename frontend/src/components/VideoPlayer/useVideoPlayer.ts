@@ -1,5 +1,5 @@
 /** @format */
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useContext } from 'react'
 import MediaInfo from 'mediainfo.js'
 import {
     VideoSources,
@@ -13,11 +13,13 @@ import {
     playbackRateDelta,
     maxPlaybackRate,
 } from '../Common/constants'
+import GlobalContext from '../Global/GlobalContext'
 
 /**
  * Hook that is used with VideoPlayerContext
  */
 export default function useVideoPlayer(): VideoPlayerHook {
+    const { trimmedRegions } = useContext(GlobalContext)
     const currentSources = useRef<VideoSources>({
         current: 'original',
         original: '',
@@ -33,6 +35,7 @@ export default function useVideoPlayer(): VideoPlayerHook {
     const srcInitialized = useRef<boolean>(false)
     const isFullScreen = useRef(false)
     const videoDimensions = useRef<Dimensions>({} as Dimensions)
+    const _currentTime = useRef<number>(0)
 
     const [_isFullScreen, setIsFullScreen] = useState(false)
     const [_videoDimensions, updateVideoDimensions] = useState<Dimensions>(
@@ -52,6 +55,7 @@ export default function useVideoPlayer(): VideoPlayerHook {
     const [inputFile, setInputFile] = useState<File | undefined>()
     const [inputMetadata, setInputMetadata] = useState<Array<any>>([])
     const [inputSrc, _setInputSrc] = useState<string>('')
+    const [_, _setCurrentTime] = useState<number>(0)
 
     useEffect(() => {
         currentSources.current = {
@@ -71,6 +75,13 @@ export default function useVideoPlayer(): VideoPlayerHook {
     useEffect(() => {
         // TODO: SET DURATION, VIDEO DIMENSIONS AND OTHER RELEVANT METADATA
     }, [inputMetadata])
+
+    useEffect(() => {}, [trimmedRegions])
+
+    function setCurrentTime(time: number) {
+        _setCurrentTime(time)
+        _currentTime.current = time
+    }
 
     function setInputSrc(src: string) {
         currentSources.current.original = src
@@ -239,7 +250,25 @@ export default function useVideoPlayer(): VideoPlayerHook {
         }
         if (time !== undefined) {
             time = time > 0 ? time : 0
+            if (playing()) {
+            }
+            const regions = trimmedRegions()
+            console.log(regions)
+            const numRegions = regions.length
+            for (let i = 0; i < numRegions; i++) {
+                const region = regions[i]
+                if (time > region[0] && time < region[1]) {
+                    if (time > _currentTime.current) {
+                        time = region[1]
+                        break
+                    } else {
+                        time = region[0]
+                        break
+                    }
+                }
+            }
             plyr.currentTime = time
+            setCurrentTime(time)
         }
         return plyr.currentTime
     }
@@ -329,9 +358,29 @@ export default function useVideoPlayer(): VideoPlayerHook {
      * @function
      */
     function onTimeUpdate(): void {
-        const t = currentTime()
-        const d = duration.current > 0 ? duration.current : t
-        setProgress((100 * t) / d)
+        let time = currentTime()
+        let newTime: number | undefined
+        const regions = trimmedRegions()
+        const numRegions = regions.length
+        for (let i = 0; i < numRegions; i++) {
+            const region = regions[i]
+            if (time > region[0] && time < region[1]) {
+                if (time > _currentTime.current) {
+                    newTime = region[1]
+                    break
+                } else {
+                    newTime = region[0]
+                    break
+                }
+            }
+        }
+        if (newTime) {
+            currentTime(newTime)
+        } else {
+            newTime = time
+        }
+        const d = duration.current > 0 ? duration.current : newTime
+        setProgress((100 * newTime) / d)
     }
 
     /**
@@ -348,7 +397,6 @@ export default function useVideoPlayer(): VideoPlayerHook {
      * @param time
      */
     const onControlBarSeek = (time: number) => {
-        console.log('onControlBarSeek', time)
         clampTime(time)
     }
 

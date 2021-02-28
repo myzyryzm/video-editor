@@ -1,121 +1,148 @@
 /** @format */
 import { useState, useEffect, useContext } from 'react'
-import { TrimHook } from './commonRequirements'
+import { TrimHook, TrimInterval } from './commonRequirements'
 import moment, { Moment } from 'moment'
 import VideoPlayerContext from '../VideoPlayer/VideoPlayerContext'
+import GlobalContext from '../Global/GlobalContext'
 
 export default function useTrimming(): TrimHook {
     const { duration, currentTime } = useContext(VideoPlayerContext)
-    const [trimStartMoment, setTrimStartMoment] = useState<Moment>(
-        moment().set({
-            hour: 0,
-            minute: 0,
-            second: 0,
-        })
-    )
-    const [trimEndMoment, setTrimEndMoment] = useState<Moment>(
-        moment().set({
-            hour: 0,
-            minute: 0,
-            second: 0,
-        })
-    )
-    const [trimStartPercent, setTrimStartPercent] = useState<number>(0)
-    const [trimEndPercent, setTrimEndPercent] = useState<number>(0)
-    const [trimStart, setTrimStart] = useState<number>(0)
-    const [trimEnd, setTrimEnd] = useState<number>(0)
+    const { trimmedRegions } = useContext(GlobalContext)
+    const [trimIntervals, setTrimIntervals] = useState<Array<TrimInterval>>([])
 
     useEffect(() => {
         if (duration > 0) {
-            setTrimTime('end', duration)
+            // setTrimTime('end', duration)
         }
     }, [duration])
 
     useEffect(() => {
-        const time = trimEnd
-        if (time > 0) {
-            const d = duration > time ? duration : time
-            setTrimEndPercent((100 * (d - time)) / d)
-            if (trimTime('start', 'number') > time) {
-                setTrimTime('start', time)
-            }
-        }
-    }, [trimEnd])
+        trimmedRegions('POST', trimIntervals)
+    }, [trimIntervals])
 
-    useEffect(() => {
-        const time = trimStart
-        if (time > 0) {
-            const d = duration > time ? duration : time
-            setTrimStartPercent((100 * time) / d)
+    function getTrimInterval(id: string | number): TrimInterval | undefined {
+        let trimInterval: TrimInterval | undefined = undefined
+        if (typeof id === 'string') {
+            // id is being used here
+            trimInterval = trimIntervals.find((interval) => interval.id === id)
+        } else if (id < trimIntervals.length && id >= 0) {
+            // id is being used here as an index for the trimInterval array
+            trimInterval = trimIntervals[0]
         }
-    }, [trimStart])
+        return trimInterval
+    }
 
-    function setTrimTime(type: 'start' | 'end', value: number | Moment): void {
-        if (type === 'start') {
-            if (typeof value == 'number') {
-                setTrimStart(value)
-                setTrimStartMoment(
-                    moment()
-                        .set({
-                            hour: 0,
-                            minute: 0,
-                            second: 0,
-                        })
-                        .add(value, 'seconds')
-                )
-            } else {
-                setTrimStartMoment(value)
-                setTrimStart(
-                    value.hours() * 3600 +
-                        value.minutes() * 60 +
-                        value.seconds() +
-                        value.milliseconds() / 1000
-                )
-            }
+    function numberTime(
+        time: number | Moment | undefined,
+        defaultTime: number = 0
+    ): number {
+        if (typeof time == 'number') {
+            return time
+        }
+        if (typeof time == 'undefined') {
+            return defaultTime
+        }
+        return (
+            time.hours() * 3600 +
+            time.minutes() * 60 +
+            time.seconds() +
+            time.milliseconds() / 1000
+        )
+    }
+
+    /**
+     * deletes an interval. will return true if it found the interval else it returns false
+     * @param id
+     */
+    function deleteInterval(id: string): boolean {
+        const trimInterval = getTrimInterval(id)
+        if (trimInterval) {
+            setTrimIntervals(
+                trimIntervals.filter((interval) => {
+                    return interval.id !== id
+                })
+            )
+        }
+        return trimInterval != undefined
+    }
+
+    function updateInterval(
+        id: string,
+        start?: number | Moment,
+        end?: number | Moment
+    ) {
+        const trimInterval = getTrimInterval(id)
+        if (trimInterval) {
+            setTrimIntervals(
+                trimIntervals.map((interval) => {
+                    if (interval.id !== id) {
+                        return interval
+                    }
+                    start = numberTime(start, interval[0])
+                    end = numberTime(end, interval[1])
+                    return {
+                        ...interval,
+                        interval: [start, end],
+                    }
+                })
+            )
         } else {
-            if (typeof value == 'number') {
-                setTrimEnd(value)
-                setTrimEndMoment(
-                    moment()
-                        .set({
-                            hour: 0,
-                            minute: 0,
-                            second: 0,
-                        })
-                        .add(value, 'seconds')
-                )
-            } else {
-                setTrimEndMoment(value)
-                setTrimEnd(
-                    value.hours() * 3600 +
-                        value.minutes() * 60 +
-                        value.seconds() +
-                        value.milliseconds() / 1000
-                )
-            }
+            // create a new interval
+            start = numberTime(start, 0)
+            end = numberTime(end, duration)
+            setTrimIntervals([
+                ...trimIntervals,
+                {
+                    id,
+                    interval: [start, end],
+                },
+            ])
         }
     }
 
     function trimTime(
         type: 'start' | 'end',
-        returnType: 'number' | 'moment' | 'percent'
+        returnType: 'number' | 'moment' | 'percent',
+        id: string | number
     ): number | Moment {
-        if (returnType === 'number') {
-            return type === 'start' ? trimStart : trimEnd
-        } else if (returnType === 'percent') {
-            return type === 'start' ? trimStartPercent : trimEndPercent
+        let trimInterval = getTrimInterval(id)
+        let time: number = 0
+        if (trimInterval) {
+            time =
+                type === 'start'
+                    ? trimInterval.interval[0]
+                    : trimInterval.interval[1]
+        } else {
+            // TODO: how to handle an undefined trimInterval?
         }
-        return type === 'start' ? trimStartMoment : trimEndMoment
+        // const time = type === 'start' ? trimStart : trimEnd
+        if (returnType === 'number') {
+            return time
+        } else if (returnType === 'percent') {
+            return (100 * (duration - time)) / duration
+        }
+        return moment()
+            .set({
+                hour: 0,
+                minute: 0,
+                second: 0,
+            })
+            .add(time, 'seconds')
     }
 
-    function setTrimTimeToCurrentTime(type: 'start' | 'end'): void {
+    function setTrimTimeToCurrentTime(type: 'start' | 'end', id: string): void {
         const t = currentTime()
-        setTrimTime(type, t)
+        if (type === 'start') {
+            updateInterval(id, t, undefined)
+        } else {
+            updateInterval(id, undefined, t)
+        }
     }
 
     return {
-        setTrimTimeToCurrentTime: setTrimTimeToCurrentTime,
-        setTrimTime,
+        setTrimTimeToCurrentTime,
         trimTime,
+        updateInterval,
+        deleteInterval,
     }
 }

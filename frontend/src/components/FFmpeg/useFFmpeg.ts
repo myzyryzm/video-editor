@@ -42,7 +42,7 @@ export default function useFFmpeg(): FFmpegHook {
     }
 
     function log({ type, message }: { type: string; message: string }) {
-        console.log(message)
+        // console.log(message)
     }
 
     async function uploadFile(file: File) {
