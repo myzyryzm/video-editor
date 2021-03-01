@@ -13,6 +13,7 @@ import {
     playbackRateDelta,
     maxPlaybackRate,
 } from '../Common/constants'
+import { Vector2D } from '../Common/commonRequirements'
 import GlobalContext from '../Global/GlobalContext'
 
 /**
@@ -36,6 +37,7 @@ export default function useVideoPlayer(): VideoPlayerHook {
     const isFullScreen = useRef(false)
     const videoDimensions = useRef<Dimensions>({} as Dimensions)
     const _currentTime = useRef<number>(0)
+    const _trimmedRegions = useRef<Array<Vector2D>>([])
 
     const [_isFullScreen, setIsFullScreen] = useState(false)
     const [_videoDimensions, updateVideoDimensions] = useState<Dimensions>(
@@ -76,7 +78,9 @@ export default function useVideoPlayer(): VideoPlayerHook {
         // TODO: SET DURATION, VIDEO DIMENSIONS AND OTHER RELEVANT METADATA
     }, [inputMetadata])
 
-    useEffect(() => {}, [trimmedRegions])
+    useEffect(() => {
+        _trimmedRegions.current = trimmedRegions
+    }, [trimmedRegions])
 
     function setCurrentTime(time: number) {
         _setCurrentTime(time)
@@ -250,23 +254,6 @@ export default function useVideoPlayer(): VideoPlayerHook {
         }
         if (time !== undefined) {
             time = time > 0 ? time : 0
-            if (playing()) {
-            }
-            const regions = trimmedRegions()
-            console.log(regions)
-            const numRegions = regions.length
-            for (let i = 0; i < numRegions; i++) {
-                const region = regions[i]
-                if (time > region[0] && time < region[1]) {
-                    if (time > _currentTime.current) {
-                        time = region[1]
-                        break
-                    } else {
-                        time = region[0]
-                        break
-                    }
-                }
-            }
             plyr.currentTime = time
             setCurrentTime(time)
         }
@@ -359,37 +346,44 @@ export default function useVideoPlayer(): VideoPlayerHook {
      */
     function onTimeUpdate(): void {
         let time = currentTime()
-        let newTime: number | undefined
-        const regions = trimmedRegions()
-        const numRegions = regions.length
-        for (let i = 0; i < numRegions; i++) {
-            const region = regions[i]
-            if (time > region[0] && time < region[1]) {
-                if (time > _currentTime.current) {
-                    newTime = region[1]
-                    break
-                } else {
-                    newTime = region[0]
-                    break
-                }
-            }
-        }
-        if (newTime) {
-            currentTime(newTime)
+        const newTime = clampTime(time)
+        // if the times are equal then we know the currentTime is not in a trimmed region
+        if (newTime === time) {
+            const d = duration.current > 0 ? duration.current : time
+            setProgress((100 * time) / d)
         } else {
-            newTime = time
+            // else we need to update the currentTime to the newTime which will cause this onTimeUpdate to be called again with a newly updated player time
+            currentTime(newTime)
         }
-        const d = duration.current > 0 ? duration.current : newTime
-        setProgress((100 * newTime) / d)
     }
 
     /**
-     * makes sure time is greater than 0; prolly should add check for time greater than duration
+     * Makes sure the time is not in a trimmed region
      * @param time
      */
-    const clampTime = (time: number) => {
-        const t = time > 0 ? time : 0
-        currentTime(t)
+    const clampTime = (time: number): number => {
+        time = time > 0 ? time : 0
+        let newTime: number = time
+        if (playing()) {
+            const regions = _trimmedRegions.current
+            const numRegions = regions.length
+            for (let i = 0; i < numRegions; i++) {
+                const region = regions[i]
+                // if the current time is in some trimmed region
+                if (time > region[0] && time < region[1]) {
+                    //
+                    if (time > _currentTime.current) {
+                        newTime = region[1] + 0.1
+                        break
+                    } else {
+                        newTime = region[0] - 0.1
+                        break
+                    }
+                }
+            }
+        }
+        newTime = newTime > 0 ? newTime : 0
+        return newTime
     }
 
     /**
@@ -397,7 +391,8 @@ export default function useVideoPlayer(): VideoPlayerHook {
      * @param time
      */
     const onControlBarSeek = (time: number) => {
-        clampTime(time)
+        const newTime = clampTime(time)
+        currentTime(newTime)
     }
 
     /**
@@ -444,12 +439,14 @@ export default function useVideoPlayer(): VideoPlayerHook {
 
     function onForward(time?: number) {
         const fwdTime = time ? time : defaultFwdTime
-        clampTime(currentTime() + fwdTime)
+        const newTime = clampTime(currentTime() + fwdTime)
+        currentTime(newTime)
     }
 
     function onReplay(time?: number) {
         const rplyTime = time ? time : defaultReplayTime
-        clampTime(currentTime() - rplyTime)
+        const newTime = clampTime(currentTime() - rplyTime)
+        currentTime(newTime)
     }
 
     /**

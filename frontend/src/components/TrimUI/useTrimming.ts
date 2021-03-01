@@ -7,7 +7,7 @@ import GlobalContext from '../Global/GlobalContext'
 
 export default function useTrimming(): TrimHook {
     const { duration, currentTime } = useContext(VideoPlayerContext)
-    const { trimmedRegions } = useContext(GlobalContext)
+    const { setTrimmedRegions } = useContext(GlobalContext)
     const [trimIntervals, setTrimIntervals] = useState<Array<TrimInterval>>([])
 
     useEffect(() => {
@@ -17,7 +17,7 @@ export default function useTrimming(): TrimHook {
     }, [duration])
 
     useEffect(() => {
-        trimmedRegions('POST', trimIntervals)
+        setTrimmedRegions(trimIntervals)
     }, [trimIntervals])
 
     function getTrimInterval(id: string | number): TrimInterval | undefined {

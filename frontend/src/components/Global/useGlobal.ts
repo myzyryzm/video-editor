@@ -6,24 +6,18 @@ import { UpdateType, GlobalHook } from './commonRequirements'
 
 export default function useGlobal(): GlobalHook {
     const trimmedRegionsRef = useRef<Array<Vector2D>>([])
-    const [_trimmedRegions, setTrimmedRegions] = useState<Array<Vector2D>>([])
+    const [_trimmedRegions, _setTrimmedRegions] = useState<Array<Vector2D>>([])
 
-    function trimmedRegions(
-        type: UpdateType = 'GET',
-        intervals?: Array<TrimInterval>
-    ): Array<Vector2D> {
-        let regions = trimmedRegionsRef.current
-        if (type !== 'GET' && intervals) {
-            regions = intervals.map((interval) => {
-                return interval.interval
-            })
-        }
-        setTrimmedRegions(regions)
+    function setTrimmedRegions(intervals: Array<TrimInterval>) {
+        const regions = intervals.map((interval) => {
+            return interval.interval
+        })
+        _setTrimmedRegions(regions)
         trimmedRegionsRef.current = regions
-        return regions
     }
 
     return {
-        trimmedRegions,
+        trimmedRegions: _trimmedRegions,
+        setTrimmedRegions,
     }
 }

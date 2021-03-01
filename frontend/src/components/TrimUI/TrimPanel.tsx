@@ -1,19 +1,13 @@
 /** @format */
 
 import React, { useContext, useRef } from 'react'
-import MomentUtils from '@date-io/moment'
-import moment, { Moment } from 'moment'
-import {
-    MuiPickersUtilsProvider,
-    KeyboardTimePicker,
-} from '@material-ui/pickers'
+import { Moment } from 'moment'
 import {
     Card,
     CardContent,
     CardHeader,
     withStyles,
     Typography,
-    Button,
 } from '@material-ui/core'
 import TrimmingContext from './TrimmingContext'
 import TrimSlider from './TrimSlider'
@@ -30,80 +24,6 @@ const Header = withStyles((theme) => ({
     },
 }))(Typography)
 
-interface ITimePicker {
-    type: 'start' | 'end'
-    time: Moment
-    onChange: (type: 'start' | 'end', value: Moment) => void
-    maxTimeSeconds: number
-    setToTime: () => void
-}
-function TimePicker({
-    type,
-    time,
-    onChange,
-    maxTimeSeconds,
-    setToTime,
-}: ITimePicker) {
-    const validateTimeValue = (value: Moment): Moment => {
-        const maxEndTime: Moment = moment()
-            .set({
-                hour: 0,
-                minute: 0,
-                second: 0,
-            })
-            .add(maxTimeSeconds, 'seconds')
-
-        if (value >= maxEndTime) {
-            return maxEndTime
-        } else {
-            return value
-        }
-    }
-
-    return (
-        <Card
-            style={{
-                width: '94%',
-                marginBottom: 10,
-                display: 'flex',
-            }}
-        >
-            <MuiPickersUtilsProvider utils={MomentUtils}>
-                <KeyboardTimePicker
-                    label={`${type == 'start' ? 'Start Time:' : 'End Time:'}`}
-                    ampm={false}
-                    keyboardIcon={null}
-                    format='HH:mm:ss'
-                    onChange={(date, value) => {
-                        onChange(type, date as Moment)
-                    }}
-                    value={validateTimeValue(time)}
-                    style={{
-                        margin: 5,
-                        width: '40%',
-                    }}
-                />
-            </MuiPickersUtilsProvider>
-            <Button
-                autoFocus
-                variant='contained'
-                color='primary'
-                style={{
-                    margin: 'auto',
-                    marginRight: 5,
-                    height: '50%',
-                    minHeight: 28,
-                    maxHeight: 40,
-                    fontSize: 13,
-                }}
-                onClick={setToTime}
-            >
-                Set To Time
-            </Button>
-        </Card>
-    )
-}
-
 interface ITrimPanel {}
 
 export default function TrimPanel({}: ITrimPanel) {
@@ -111,7 +31,6 @@ export default function TrimPanel({}: ITrimPanel) {
     const { duration, currentTime, onSeek: videoOnSeek } = useContext(
         VideoPlayerContext
     )
-    // console.log('TrimPanel', currentTime(), currentPlayer()?.currentTime)
     const seekbarRef = useRef<HTMLSpanElement>({} as HTMLSpanElement)
 
     function setTrimTimes(
@@ -121,12 +40,10 @@ export default function TrimPanel({}: ITrimPanel) {
     ) {
         updateInterval(id, start, end)
     }
+
     function onSeek(newProgress: number) {
         videoOnSeek(newProgress * duration)
     }
-
-    // const trimStartMoment = trimTime('start', 'moment') as Moment
-    // const trimEndMoment = trimTime('end', 'moment') as Moment
 
     return (
         <Card
@@ -163,20 +80,6 @@ export default function TrimPanel({}: ITrimPanel) {
                     minTimeSeconds={0}
                     deleteInterval={deleteInterval}
                 />
-                {/* <TimePicker
-                    type='start'
-                    time={trimStartMoment}
-                    onChange={setTrimTime}
-                    maxTimeSeconds={trimEnd}
-                    setToTime={() => setTrimTimeToCurrentTime('start')}
-                />
-                <TimePicker
-                    type='end'
-                    time={trimEndMoment}
-                    onChange={setTrimTime}
-                    maxTimeSeconds={duration}
-                    setToTime={() => setTrimTimeToCurrentTime('end')}
-                /> */}
             </CardContent>
         </Card>
     )
